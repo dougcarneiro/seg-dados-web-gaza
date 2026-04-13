@@ -1,0 +1,23 @@
+{% extends "refugees/base.html" %}
+{% block title %}Meu cadastro{% endblock %}
+{% block content %}
+  <div class="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+    <h1 class="text-xl font-semibold">{{ refugee.name }}</h1>
+    <dl class="mt-6 space-y-3 text-sm">
+      <div><dt class="font-medium text-gray-500">E-mail</dt><dd>{{ user.email }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Endereço</dt><dd class="whitespace-pre-line">{{ refugee.address }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Idade</dt><dd>{{ refugee.age }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Religião</dt><dd>{{ refugee.get_religion_display }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Ideologia política</dt><dd>{{ refugee.get_political_ideology_display }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Profissão</dt><dd>{{ refugee.profession }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Número de filhos</dt><dd>{{ refugee.number_of_children }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Renda familiar antes da guerra</dt><dd>{{ refugee.income_before_war }}</dd></div>
+      <div><dt class="font-medium text-gray-500">Formação escolar</dt><dd>{{ refugee.get_education_display }}</dd></div>
+      <div><dt class="font-medium text-gray-500">2FA por e-mail</dt><dd>{% if user.two_factor_enabled %}Ativo{% else %}Desativado{% endif %}</dd></div>
+    </dl>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="{% url 'refugees:profile_edit' %}" class="rounded bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">Editar</a>
+      <a href="{% url 'refugees:profile_delete_confirm' %}" class="rounded border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Excluir conta</a>
+    </div>
+  </div>
+{% endblock %}

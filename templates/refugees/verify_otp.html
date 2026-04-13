@@ -1,0 +1,16 @@
+{% extends "refugees/base.html" %}
+{% block title %}Verificação em duas etapas{% endblock %}
+{% block content %}
+  <div class="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+    <h1 class="text-xl font-semibold">Código de verificação</h1>
+    <p class="mt-2 text-sm text-gray-600">Digite o OTP de 6 dígitos enviado ao seu e-mail.</p>
+    <form method="post" class="mt-6">
+      {% csrf_token %}
+      {% include "refugees/_form_fields.html" with form=form %}
+      <button type="submit" class="w-full rounded bg-accent py-2.5 text-sm font-medium text-white hover:bg-accent-hover">Confirmar</button>
+    </form>
+    <p class="mt-4 text-center text-sm">
+      <a href="{% url 'refugees:login' %}" class="text-gray-600 hover:text-accent">Voltar ao login</a>
+    </p>
+  </div>
+{% endblock %}

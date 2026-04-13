@@ -1,0 +1,23 @@
+{% extends "refugees/base.html" %}
+{% load static %}
+{% block title %}Cadastro — Refugiados{% endblock %}
+{% block content %}
+  <div class="mx-auto max-w-lg rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+    <h1 class="text-xl font-semibold">Nova conta</h1>
+    <p class="mt-1 text-sm text-gray-600">Use um e-mail válido e uma senha forte.</p>
+    <form id="signup-form" method="post" class="mt-6" novalidate>
+      {% csrf_token %}
+      {% include "refugees/_signup_form_fields.html" %}
+      <button type="submit" id="signup-submit-btn" disabled class="w-full rounded bg-accent py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40">Registrar</button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-600">
+      Já tem conta? <a href="{% url 'refugees:login' %}" class="text-accent hover:underline">Entrar</a>
+    </p>
+  </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+window.REFUGEES_SIGNUP = { passwordPreviewUrl: "{% url 'refugees:password_strength_preview' %}" };
+</script>
+<script src="{% static 'web/js/signup.js' %}" defer></script>
+{% endblock %}

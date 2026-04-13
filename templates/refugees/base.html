@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Cadastro de refugiados{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="{% static 'web/js/tailwind-config.js' %}"></script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <header class="border-b border-gray-200 bg-white">
+    <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <a href="{% url 'refugees:home' %}" class="font-semibold text-accent">Refugiados — Gaza</a>
+      <nav class="flex flex-wrap items-center gap-3 text-sm">
+        {% if user.is_authenticated %}
+          <a href="{% url 'refugees:profile' %}" class="text-gray-600 hover:text-accent">Meu cadastro</a>
+          {% if user.is_staff %}
+            <a href="{% url 'admin:index' %}" class="text-gray-600 hover:text-accent">Painel administrativo</a>
+          {% endif %}
+          <form method="post" action="{% url 'refugees:logout' %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="m-0 cursor-pointer border-0 bg-transparent p-0 text-sm text-gray-600 hover:text-accent">Sair</button>
+          </form>
+        {% else %}
+          <a href="{% url 'refugees:login' %}" class="inline-flex items-center rounded border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50">Entrar</a>
+          <a href="{% url 'refugees:signup' %}" class="inline-flex items-center rounded bg-accent px-3 py-1.5 font-medium text-white hover:bg-accent-hover">Cadastrar</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="mx-auto max-w-3xl px-4 py-8">
+    {% if messages %}
+      <ul class="mb-6 space-y-2">
+        {% for message in messages %}
+          <li class="rounded border border-gray-200 bg-white px-3 py-2 text-sm {% if message.tags == 'error' %}border-red-200 text-red-800{% elif message.tags == 'success' %}border-emerald-200 text-emerald-900{% else %}text-gray-700{% endif %}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
