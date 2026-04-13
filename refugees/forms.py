@@ -110,6 +110,7 @@ class SignUpForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.two_factor_enabled = True
         if commit:
             user.save()
             Refugee.objects.create(
@@ -129,7 +130,7 @@ class SignUpForm(UserCreationForm):
 
 class RefugiadoProfileForm(forms.ModelForm):
     two_factor_enabled = forms.BooleanField(
-        label='Ativar autenticação em duas etapas por e-mail',
+        label='Autenticação em duas etapas',
         required=False,
     )
 
@@ -170,6 +171,11 @@ class RefugiadoProfileForm(forms.ModelForm):
             ]
         )
         _apply_widgets(self)
+        tfa = self.fields['two_factor_enabled'].widget
+        tfa.attrs['class'] = (
+            'h-4 w-4 cursor-pointer rounded border-gray-300 accent-slate-600 '
+            'focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-0'
+        )
 
     def save(self, commit=True):
         instance = super().save(commit=False)

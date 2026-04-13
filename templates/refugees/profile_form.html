@@ -5,7 +5,7 @@
     <h1 class="text-xl font-semibold">Editar cadastro</h1>
     <form method="post" class="mt-6">
       {% csrf_token %}
-      {% include "refugees/_form_fields.html" with form=form %}
+      {% include "refugees/_profile_form_fields.html" %}
       <button type="submit" class="w-full rounded bg-accent py-2.5 text-sm font-medium text-white hover:bg-accent-hover">Salvar</button>
     </form>
     <p class="mt-4 text-center text-sm">

@@ -99,6 +99,53 @@
     return 'match';
   }
 
+  function setClientError(fieldId, msg) {
+    const p = document.getElementById(fieldId + '-client-error');
+    if (!p) return;
+    if (msg) {
+      p.textContent = msg;
+      p.classList.remove('hidden');
+    } else {
+      p.textContent = '';
+      p.classList.add('hidden');
+    }
+  }
+
+  function refreshClientError(fieldId) {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    const v = String(el.value || '').trim();
+    let msg = '';
+    if (!v) {
+      msg = 'Preencha este campo.';
+    } else if (fieldId === 'id_email' && !emailOk()) {
+      msg = 'Informe um e-mail válido.';
+    } else if (fieldId === 'id_age' && !ageOk()) {
+      msg = 'Informe uma idade entre 1 e 130.';
+    } else if (fieldId === 'id_number_of_children' && !childrenOk()) {
+      msg = 'Informe um número entre 0 e 50.';
+    } else if (fieldId === 'id_income_before_war' && !incomeOk()) {
+      msg = 'Informe um valor numérico maior ou igual a zero.';
+    }
+    setClientError(fieldId, msg);
+  }
+
+  function refreshPassword1ClientError() {
+    if (!pw.value.trim()) {
+      setClientError('id_password1', 'Preencha este campo.');
+    } else {
+      setClientError('id_password1', '');
+    }
+  }
+
+  function refreshPassword2ClientError() {
+    if (!pw2.value.trim()) {
+      setClientError('id_password2', 'Preencha este campo.');
+    } else {
+      setClientError('id_password2', '');
+    }
+  }
+
   function updatePassword2Ui() {
     const st = password2State();
     if (st === 'empty') {
@@ -141,6 +188,7 @@
       passwordRemoteOk = false;
       passwordRemotePending = false;
       updateSubmitEnabled();
+      refreshPassword1ClientError();
       return;
     }
     const myReq = ++reqId;
@@ -187,6 +235,7 @@
             '</ul>';
         }
         updateSubmitEnabled();
+        refreshPassword1ClientError();
       })
       .catch(function () {
         if (myReq !== reqId) return;
@@ -196,6 +245,7 @@
         err1.innerHTML =
           '<p class="text-red-600">Não foi possível verificar agora. Tente de novo.</p>';
         updateSubmitEnabled();
+        refreshPassword1ClientError();
       });
   }
 
@@ -207,25 +257,36 @@
   pw.addEventListener('input', function () {
     passwordRemoteOk = false;
     schedulePreview();
+    refreshPassword1ClientError();
     updateSubmitEnabled();
   });
   pw.addEventListener('blur', function () {
     clearTimeout(timer);
     runPasswordPreview();
+    refreshPassword1ClientError();
   });
 
-  pw2.addEventListener('input', updateSubmitEnabled);
-  pw2.addEventListener('blur', updateSubmitEnabled);
+  pw2.addEventListener('input', function () {
+    refreshPassword2ClientError();
+    updateSubmitEnabled();
+  });
+  pw2.addEventListener('blur', function () {
+    refreshPassword2ClientError();
+    updateSubmitEnabled();
+  });
 
   function bindRevalidate(el) {
     if (!el) return;
+    const fid = el.id;
     el.addEventListener('input', function () {
       passwordRemoteOk = false;
       if (pw.value) schedulePreview();
+      refreshClientError(fid);
       updateSubmitEnabled();
     });
     el.addEventListener('blur', function () {
       if (pw.value) runPasswordPreview();
+      refreshClientError(fid);
       updateSubmitEnabled();
     });
   }
@@ -236,8 +297,14 @@
     const el = document.getElementById(id);
     if (!el || el === pw || el === pw2) return;
     const ev = el.tagName === 'SELECT' ? 'change' : 'input';
-    el.addEventListener(ev, updateSubmitEnabled);
-    el.addEventListener('blur', updateSubmitEnabled);
+    el.addEventListener(ev, function () {
+      refreshClientError(id);
+      updateSubmitEnabled();
+    });
+    el.addEventListener('blur', function () {
+      refreshClientError(id);
+      updateSubmitEnabled();
+    });
   });
 
   updateSubmitEnabled();

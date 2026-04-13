@@ -1,0 +1,61 @@
+{% if form.non_field_errors %}
+  <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+    {{ form.non_field_errors }}
+  </div>
+{% endif %}
+{% for field in form %}
+  {% if field.name == 'two_factor_enabled' %}
+    <div class="mb-6">
+      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Segurança da conta</p>
+      <div
+        class="rounded-xl border border-gray-200 bg-gradient-to-br from-slate-50/80 to-gray-50 p-4 shadow-sm transition hover:border-gray-300 hover:shadow-md focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-500/15"
+      >
+        <label for="{{ field.id_for_label }}" class="flex cursor-pointer items-start gap-4">
+          <span class="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+            {{ field }}
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <svg
+                class="h-4 w-4 shrink-0 text-slate-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+                />
+              </svg>
+              {{ field.label }}
+            </span>
+            <span class="mt-1.5 block text-sm leading-relaxed text-gray-600">
+              Quando ativado, enviamos um código de uso único para o seu e-mail a cada login.
+            </span>
+          </span>
+        </label>
+      </div>
+      {% if field.help_text %}
+        <p class="mt-2 text-xs text-gray-500">{{ field.help_text }}</p>
+      {% endif %}
+      {% if field.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ field.errors.0 }}</p>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="mb-4">
+      <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}
+        <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+      {% endif %}
+      {% if field.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ field.errors.0 }}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endfor %}
