@@ -42,6 +42,47 @@
     return d.innerHTML;
   }
 
+  function getLocalCompositionMessages(password) {
+    const p = password || '';
+    if (!p) return [];
+    const msgs = [];
+    if (!/[a-z]/.test(p)) {
+      msgs.push('A senha deve conter ao menos uma letra minúscula.');
+    }
+    if (!/[A-Z]/.test(p)) {
+      msgs.push('A senha deve conter ao menos uma letra maiúscula.');
+    }
+    if (!/[^a-zA-Z0-9]/.test(p)) {
+      msgs.push('A senha deve conter ao menos um caractere especial (não alfanumérico).');
+    }
+    return msgs;
+  }
+
+  function setPassword1ErrorList(msgs) {
+    if (!msgs || !msgs.length) {
+      err1.innerHTML = '';
+      return;
+    }
+    err1.innerHTML =
+      '<ul class="list-disc space-y-1 pl-5 text-red-600">' +
+      msgs
+        .map(function (m) {
+          return '<li>' + esc(m) + '</li>';
+        })
+        .join('') +
+      '</ul>';
+  }
+
+  function showLocalCompositionErrors(p) {
+    const msgs = getLocalCompositionMessages(p);
+    if (msgs.length) {
+      icon1.innerHTML = svgX;
+      setPassword1ErrorList(msgs);
+      return true;
+    }
+    return false;
+  }
+
   const svgCheck =
     '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600" viewBox="0 0 20 20" fill="currentColor" focusable="false" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
   const svgSpin =
@@ -191,6 +232,13 @@
       refreshPassword1ClientError();
       return;
     }
+    if (showLocalCompositionErrors(p)) {
+      passwordRemotePending = false;
+      passwordRemoteOk = false;
+      updateSubmitEnabled();
+      refreshPassword1ClientError();
+      return;
+    }
     const myReq = ++reqId;
     passwordRemotePending = true;
     icon1.innerHTML = svgSpin;
@@ -256,9 +304,28 @@
 
   pw.addEventListener('input', function () {
     passwordRemoteOk = false;
-    schedulePreview();
+    clearTimeout(timer);
+    const p = pw.value;
+    if (!p) {
+      icon1.innerHTML = '';
+      err1.innerHTML = '';
+      passwordRemotePending = false;
+      refreshPassword1ClientError();
+      updateSubmitEnabled();
+      return;
+    }
+    if (showLocalCompositionErrors(p)) {
+      passwordRemotePending = false;
+      refreshPassword1ClientError();
+      updateSubmitEnabled();
+      return;
+    }
+    err1.innerHTML = '';
+    icon1.innerHTML = svgSpin;
+    passwordRemotePending = true;
     refreshPassword1ClientError();
     updateSubmitEnabled();
+    schedulePreview();
   });
   pw.addEventListener('blur', function () {
     clearTimeout(timer);

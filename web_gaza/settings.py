@@ -94,6 +94,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
     {'NAME': 'refugees.validators.ForbiddenPasswordListValidator'},
+    {'NAME': 'refugees.validators.UppercaseLowercaseValidator'},
+    {'NAME': 'refugees.validators.SpecialCharacterValidator'},
 ]
 
 AUTH_USER_MODEL = 'refugees.User'
