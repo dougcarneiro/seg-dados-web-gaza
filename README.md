@@ -1,6 +1,6 @@
 # Cadastro de refugiados (Gaza) — Django
 
-Aplicação web simples para registro e manutenção de dados de refugiados brasileiros, com autenticação por e-mail, política de senha reforçada e segundo fator opcional por e-mail (OTP).
+Aplicação web simples para registro e manutenção de dados de refugiados brasileiros, com autenticação por e-mail, política de senha reforçada e segundo fator por e-mail (OTP).
 
 ## Requisitos
 
@@ -12,12 +12,13 @@ Aplicação web simples para registro e manutenção de dados de refugiados bras
 1. Crie e ative um ambiente virtual.
 2. Instale dependências: `pip install -r requirements.txt`
 3. Copie `.env.example` para `.env` e preencha **todas** as variáveis. Não commite o `.env`.
-4. Gere e aplique migrações (não há arquivos de migração versionados neste repositório):
+4. Aplique migrações:
 
    ```bash
-   python manage.py makemigrations refugees
    python manage.py migrate
    ```
+
+   Se o repositório não tiver migrações ainda, gere-as antes: `python manage.py makemigrations refugees` e depois `migrate`.
 
 5. Crie um superusuário para acesso ao Django Admin (equipe): `python manage.py createsuperuser` (informe o e-mail quando solicitado).
 6. Execute o servidor: `python manage.py runserver`
@@ -32,21 +33,27 @@ Aplicação web simples para registro e manutenção de dados de refugiados bras
 | `LANGUAGE_CODE` | Ex.: `pt-br`. |
 | `TIME_ZONE` | Ex.: `America/Fortaleza`. |
 | `SQLITE_PATH` | Caminho do arquivo SQLite relativo à raiz do projeto (ex.: `db.sqlite3`). |
-| `EMAIL_BACKEND` | Ex.: `django.core.mail.backends.console.EmailBackend` (OTP no terminal) ou SMTP do Mailtrap. |
-| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Credenciais SMTP (Mailtrap: painel do inbox → SMTP). |
+| `EMAIL_BACKEND` | **Obrigatório.** Use `django.core.mail.backends.console.EmailBackend` para desenvolvimento (mensagens no **terminal do `runserver`**) ou `django.core.mail.backends.smtp.EmailBackend` para envio real (ex.: Mailtrap). |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Credenciais SMTP (só fazem efeito com backend SMTP; com `console`, são ignoradas). |
 | `DEFAULT_FROM_EMAIL` | Remetente (ex.: `noreply@example.com`). |
 | `HIBP_ENABLED` | `true` para ativar verificação opcional contra vazamentos (API Have I Been Pwned). |
 
-Para **Mailtrap**, use o host e as credenciais do sandbox SMTP no `.env` e defina `EMAIL_BACKEND` para `django.core.mail.backends.smtp.EmailBackend`.
+Para **Mailtrap**, defina `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`, use host e credenciais do sandbox SMTP no painel do inbox e **reinicie** o servidor após alterar o `.env`. Se `EMAIL_BACKEND` continuar como `console`, o OTP aparece só no terminal — não chega ao Mailtrap nem ao e-mail do usuário.
 
 ## Uso
 
-- **Público:** cadastro em `/cadastro/`, login em `/login/`, área logada em `/perfil/` (visualizar, editar, excluir conta e cadastro).
+- **Público:** cadastro em `/signup/`, login em `/login/`, verificação OTP em `/verify-otp/` quando o 2FA estiver ativo, área logada em `/profile/` (detalhes), `/profile/edit/` (edição), `/profile/delete/` (fluxo de exclusão).
 - **Equipe:** lista global de refugees em `/admin/` (superusuário).
+
+### Cadastro (UX)
+
+- Todos os campos são obrigatórios; rótulos marcados com `*` e validação auxiliar no navegador (mensagens ao sair do campo).
+- A força da senha é conferida em tempo quase real via `POST` em `/signup/check-password/` (validadores locais; o validador HIBP só roda no envio do formulário, se estiver habilitado).
+- O botão **Registrar** só habilita quando regras locais e confirmação de senha estão ok; login e cadastro desabilitam o botão de envio enquanto a requisição está em andamento (`static/web/js/form-submit-pending.js`).
 
 ### 2FA (OTP)
 
-Com a conta já criada, em **Editar cadastro** marque a opção de autenticação em duas etapas. No próximo login, após a senha correta, um código de 6 dígitos é enviado por e-mail (ou exibido no console se `EMAIL_BACKEND` for o backend de console).
+Novas contas são criadas com **autenticação em duas etapas ativa** por padrão (`two_factor_enabled` no `User`). Em **Editar cadastro** é possível **desligar** (ou religar) o 2FA. No login, com 2FA ativo e senha correta, um código de 6 dígitos é enviado por e-mail conforme `EMAIL_BACKEND` (SMTP ou texto no console).
 
 ---
 
@@ -54,7 +61,7 @@ Com a conta já criada, em **Editar cadastro** marque a opção de autenticaçã
 
 ### Autenticação com login e senha gravados localmente; login por e-mail
 
-O modelo `refugees.User` estende `AbstractUser` com `USERNAME_FIELD = 'email'` e `email` único. O formulário `EmailAuthenticationForm` usa o campo `username` do Django como campo de e-mail. As credenciais são validadas por `EmailLoginView` (subclasse de `LoginView`); após sucesso, a sessão é criada com `login()`. Os dados persistem no SQLite via ORM (tabela do usuário customizado em `refugees`).
+O modelo `refugees.User` estende `AbstractUser` com `USERNAME_FIELD = 'email'` e `email` único. O formulário `EmailAuthenticationForm` usa o campo `username` do Django como campo de e-mail. As credenciais são validadas por `EmailLoginView` (subclasse de `LoginView`); após sucesso, a sessão é criada com `login()` (ou inicia-se o fluxo OTP se o 2FA estiver ativo). Os dados persistem no SQLite via ORM (tabela do usuário customizado em `refugees`).
 
 ### Apenas hash da senha, nunca senha pura
 
@@ -66,16 +73,17 @@ Em `web_gaza/settings.py`, `AUTH_PASSWORD_VALIDATORS` inclui validadores nativos
 
 ### Manutenção do próprio cadastro quando logado
 
-Cada `Refugiado` tem `OneToOneField` para `User`. As views `profile`, `profile_edit` e fluxo de exclusão carregam o registro com `user=request.user` (ou equivalente), de forma que só o titular altera nome, endereço, idade, religião, ideologia, profissão, filhos, renda e formação. O cadastro inicial é criado no mesmo fluxo do `SignUpForm`.
+Cada `Refugee` tem `OneToOneField` para `User`. As views `profile`, `profile_edit` e fluxo de exclusão carregam o registro com `user=request.user` (ou equivalente), de forma que só o titular altera nome, endereço, idade, religião, ideologia, profissão, filhos, renda e formação. O cadastro inicial é criado no mesmo fluxo do `SignUpForm`.
 
 ### 2FA por e-mail (OTP)
 
-Se `two_factor_enabled` estiver ativo no usuário, após senha válida `EmailLoginView` gera um código numérico de 6 dígitos, guarda o **hash** na sessão com validade de 10 minutos, envia o código por `send_mail` e redireciona para `verificar-codigo/`. Após validação com `check_password` sobre o código informado, chama-se `login()` e encerra-se a etapa pendente. O envio usa apenas configuração de e-mail do `.env` (Mailtrap ou console).
+Se `two_factor_enabled` estiver ativo no usuário, após senha válida `EmailLoginView` gera um código numérico de 6 dígitos, guarda o **hash** na sessão com validade de 10 minutos, envia o código por `send_mail` e redireciona para `/verify-otp/`. Após validação com `check_password` sobre o código informado, chama-se `login()` e encerra-se a etapa pendente. O envio usa a configuração de e-mail do `.env` (SMTP ou backend de console).
 
 ---
 
 ## Estrutura principal
 
 - `web_gaza/` — projeto Django e `settings.py` (somente leitura de variáveis de ambiente).
-- `refugees/` — modelos `User` e `Refugiado`, formulários, views, validadores de senha, admin.
-- `templates/refugees/` — páginas com Tailwind via CDN (layout simples).
+- `refugees/` — modelos `User` e `Refugee`, formulários, views, validadores de senha, admin, migrações em `refugees/migrations/`.
+- `templates/refugees/` — páginas com Tailwind via CDN (layout simples); formulário de cadastro com partial `_signup_form_fields.html` e edição de perfil com `_profile_form_fields.html` (destaque do 2FA).
+- `static/web/js/` — `tailwind-config.js`, `signup.js` (pré-validação de senha e campos), `form-submit-pending.js` (estado de envio nos formulários).
