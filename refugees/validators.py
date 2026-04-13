@@ -55,7 +55,7 @@ class AtLeastOneDigitValidator:
             )
 
     def get_help_text(self):
-        return 'Sua senha deve conter ao menos um caractere numérico (0–9).'
+        return 'Sua senha deve conter ao menos um caractere numérico (0-9).'
 
 
 class SpecialCharacterValidator:
