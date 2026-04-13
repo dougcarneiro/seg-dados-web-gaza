@@ -52,6 +52,9 @@
     if (!/[A-Z]/.test(p)) {
       msgs.push('A senha deve conter ao menos uma letra maiúscula.');
     }
+    if (!/\d/.test(p)) {
+      msgs.push('A senha deve conter ao menos um caractere numérico.');
+    }
     if (!/[^a-zA-Z0-9]/.test(p)) {
       msgs.push('A senha deve conter ao menos um caractere especial (não alfanumérico).');
     }

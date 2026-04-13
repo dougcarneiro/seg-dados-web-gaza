@@ -18,7 +18,7 @@ class ForbiddenPasswordListValidator:
     def validate(self, password, user=None):
         if password.lower() in self._forbidden:
             raise ValidationError(
-                'Esta senha consta na lista local de senhas proibidas.',
+                'Esta senha é considerada muito simples. Por favor, escolha uma senha mais forte.',
                 code='password_forbidden_list',
             )
 
@@ -42,6 +42,20 @@ class UppercaseLowercaseValidator:
         return (
             'Sua senha deve conter ao menos uma letra minúscula e ao menos uma letra maiúscula.'
         )
+
+
+class AtLeastOneDigitValidator:
+    """Exige ao menos um dígito decimal (0-9)."""
+
+    def validate(self, password, user=None):
+        if not re.search(r'\d', password):
+            raise ValidationError(
+                'A senha deve conter ao menos um caractere numérico.',
+                code='password_no_digit',
+            )
+
+    def get_help_text(self):
+        return 'Sua senha deve conter ao menos um caractere numérico (0–9).'
 
 
 class SpecialCharacterValidator:
