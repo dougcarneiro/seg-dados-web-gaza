@@ -10,6 +10,12 @@
   const icon2 = document.getElementById('signup-password2-live-icon');
   const msg2 = document.getElementById('signup-password2-live-msg');
   const submitBtn = document.getElementById('signup-submit-btn');
+
+  if (typeof window.refugeesBindPasswordToggle === 'function') {
+    window.refugeesBindPasswordToggle(pw, document.getElementById('signup-toggle-password1'));
+    window.refugeesBindPasswordToggle(pw2, document.getElementById('signup-toggle-password2'));
+  }
+
   if (!url || !pw || !pw2 || !icon1 || !err1 || !icon2 || !msg2 || !submitBtn) return;
 
   let timer = null;
@@ -120,10 +126,17 @@
     return !isNaN(n) && n >= 0 && n <= 50;
   }
 
+  function incomeDigitCount(raw) {
+    const s = String(raw || '').trim().replace(/\s/g, '');
+    return (s.match(/\d/g) || []).length;
+  }
+
   function incomeOk() {
     const el = document.getElementById('id_income_before_war');
     if (!el) return false;
-    const n = parseFloat(String(el.value).replace(',', '.'));
+    const raw = String(el.value).trim();
+    if (incomeDigitCount(raw) > 12) return false;
+    const n = parseFloat(raw.replace(',', '.'));
     return !isNaN(n) && n >= 0;
   }
 
@@ -168,8 +181,12 @@
       msg = 'Informe uma idade entre 1 e 130.';
     } else if (fieldId === 'id_number_of_children' && !childrenOk()) {
       msg = 'Informe um número entre 0 e 50.';
-    } else if (fieldId === 'id_income_before_war' && !incomeOk()) {
-      msg = 'Informe um valor numérico maior ou igual a zero.';
+    } else if (fieldId === 'id_income_before_war') {
+      if (v && incomeDigitCount(v) > 12) {
+        msg = 'Use no máximo 12 dígitos no valor da renda.';
+      } else if (!incomeOk()) {
+        msg = 'Informe um valor numérico maior ou igual a zero.';
+      }
     }
     setClientError(fieldId, msg);
   }

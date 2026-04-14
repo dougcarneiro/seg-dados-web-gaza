@@ -41,13 +41,17 @@ class EmailAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _apply_widgets(self)
+        pw = self.fields['password'].widget
+        cls = pw.attrs.get('class', '')
+        pw.attrs['class'] = cls.replace('px-3', 'pl-3 pr-10', 1)
 
 
 class SignUpForm(UserCreationForm):
-    name = forms.CharField(label='Nome')
+    name = forms.CharField(label='Nome', max_length=100)
     address = forms.CharField(
         label='Endereço',
         widget=forms.Textarea(attrs={'rows': 2}),
+        max_length=200,
     )
     age = forms.IntegerField(label='Idade', min_value=1, max_value=130)
     religion = forms.ChoiceField(label='Religião', choices=Refugee.Religion.choices)
@@ -55,13 +59,14 @@ class SignUpForm(UserCreationForm):
         label='Ideologia política',
         choices=Refugee.Ideology.choices,
     )
-    profession = forms.CharField(label='Profissão')
+    profession = forms.CharField(label='Profissão', max_length=100)
     number_of_children = forms.IntegerField(label='Número de filhos', min_value=0, max_value=50)
     income_before_war = forms.DecimalField(
         label='Renda familiar antes da guerra',
         max_digits=12,
         decimal_places=2,
         min_value=0,
+        max_value=999999999999.99,
     )
     education = forms.ChoiceField(
         label='Maior grau de formação escolar',
@@ -97,7 +102,7 @@ class SignUpForm(UserCreationForm):
         for _fname in ('password1', 'password2'):
             w = self.fields[_fname].widget
             cls = w.attrs.get('class', '')
-            w.attrs['class'] = cls.replace('px-3', 'pl-3 pr-10', 1)
+            w.attrs['class'] = cls.replace('px-3', 'pl-3 pr-20', 1)
         for _name, fld in self.fields.items():
             fld.required = True
             w = fld.widget
